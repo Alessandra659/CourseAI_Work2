@@ -1,0 +1,23 @@
+{
+  "name": "pulso-presupuestal",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env server/dev.js",
+    "build": "vite build",
+    "start": "node --env-file-if-exists=.env server/dev.js --production",
+    "test": "node tests/run.js"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.15.15",
+    "lucide-react": "^0.468.0",
+    "papaparse": "^5.5.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.1.0"
+  },
+  "devDependencies": { "vite": "^7.1.0", "@vitejs/plugin-react": "^4.7.0" }
+}

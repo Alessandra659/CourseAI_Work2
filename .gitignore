@@ -1,0 +1,59 @@
+# Variables y secretos (solo se versiona la plantilla sin valores sensibles)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+id_rsa*
+id_ed25519*
+credentials.json
+credentials.*.json
+service-account*.json
+secrets/
+.secrets/
+.npmrc
+.netrc
+
+# Bases de datos, cargas y respaldos locales
+data/
+uploads/
+backups/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.dump
+*.bak
+
+# Dependencias, compilación y cachés
+node_modules/
+dist/
+build/
+.npm-cache/
+.cache/
+.vite/
+coverage/
+.nyc_output/
+.vercel/
+
+# Logs y temporales
+logs/
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Configuración local y archivos del sistema
+.codex/
+.agents/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
