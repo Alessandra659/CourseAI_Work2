@@ -4,7 +4,7 @@ export function publicConfig() {
   const publishableKey=process.env.SUPABASE_PUBLISHABLE_KEY;
   const siteUrl=process.env.APP_URL?.replace(/\/$/,'');
   if(!url||!publishableKey||!siteUrl)throw new AppError('Falta conectar Supabase: configura SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY y APP_URL en el servidor.',503);
-  if(!/^https:\/\//.test(url)||!/^https:\/\//.test(siteUrl))throw new AppError('Supabase y APP_URL deben usar HTTPS; APP_URL debe apuntar al túnel de ngrok.',503);
+  if(!/^https:\/\//.test(url)||!/^https:\/\//.test(siteUrl))throw new AppError('Supabase y APP_URL deben usar HTTPS; APP_URL debe apuntar al dominio público de la plataforma.',503);
   if(publishableKey.startsWith('sb_secret_'))throw new AppError('Usa la clave publicable de Supabase, nunca una clave secreta.',503);
   if(publishableKey.split('.').length===3){try{if(JSON.parse(Buffer.from(publishableKey.split('.')[1],'base64url')).role!=='anon')throw new Error();}catch{throw new AppError('La clave debe ser publicable o anon, no service_role.',503);}}
   return {url,publishableKey,siteUrl,callbackUrl:`${siteUrl}/auth/callback`};
