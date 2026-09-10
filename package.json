@@ -3,15 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "node --env-file-if-exists=.env server/dev.js",
     "build": "vite build",
     "start": "node --env-file-if-exists=.env server/dev.js --production",
-    "test": "node tests/run.js"
+    "test": "node tests/run.js",
+    "ngrok": "node --env-file-if-exists=.env scripts/ngrok.js"
   },
   "dependencies": {
-    "@libsql/client": "^0.15.15",
+    "@supabase/supabase-js": "2.116.0",
     "lucide-react": "^0.468.0",
     "papaparse": "^5.5.3",
     "react": "^19.1.0",
@@ -19,5 +22,9 @@
     "react-markdown": "^10.1.0",
     "recharts": "^3.1.0"
   },
-  "devDependencies": { "vite": "^7.1.0", "@vitejs/plugin-react": "^4.7.0" }
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@vitejs/plugin-react": "^4.7.0",
+    "vite": "^7.1.0"
+  }
 }

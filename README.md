@@ -1,95 +1,103 @@
-# Pulso · Análisis presupuestal de proyectos sociales
+# Pulso · Monitor de presupuesto
 
-Aplicación React con backend JavaScript compatible con Vercel Functions. Guarda partidas, CSV originales, historial de importaciones, conversaciones y gráficos (especificación + datos de la instantánea) en SQLite. Agente con herramientas de cálculo y visualización usando Ollama Cloud, modelo solicitado `gpt-oss:120b-cloud`.
+React + backend JavaScript compatible con Vercel Functions + PostgreSQL/Supabase + Supabase Auth. Ollama Cloud analiza únicamente los datos del usuario que hizo la consulta.
 
-## Ejecutar en tu computadora
+## Configuración
 
-Necesitas Node.js 22 o superior (recomendado 24).
+Node.js 24 recomendado. Instala las dependencias con `npm install` y configura `.env` a partir de `.env.example` sin sobrescribir tus claves existentes:
+
+| Variable | Uso |
+|---|---|
+| SUPABASE_URL | URL del proyecto monitor-presupuesto |
+| SUPABASE_PUBLISHABLE_KEY | Clave publicable o anon; nunca service_role |
+| APP_URL | https://quotable-unpledged-name.ngrok-free.dev |
+| OLLAMA_API_KEY | Clave privada de Ollama Cloud |
+| OLLAMA_MODEL | gpt-oss:120b-cloud |
+| NGROK_AUTHTOKEN | Token privado del túnel |
+| PORT | 3000 |
+
+APP_PASSWORD, DATABASE_URL y DATABASE_AUTH_TOKEN ya no se utilizan. El backend no abre SQLite y no admite sesiones de la antigua contraseña compartida. `.env`, bases locales, exportaciones de datos, claves y ejecutables se excluyen de Git.
+
+## Proyecto Supabase
+
+Nombre solicitado: **monitor-presupuesto**. Ejecuta la migración `supabase/migrations/202609080001_user_isolation.sql` una sola vez mediante una migración de Supabase o su editor SQL.
+
+Configura Authentication:
+
+- Email/password habilitado y registros permitidos.
+- **Confirm email desactivado** (`mailer_autoconfirm: true`). El registro debe devolver una sesión inmediatamente.
+- Contraseñas de al menos 8 caracteres.
+- Site URL: `https://quotable-unpledged-name.ngrok-free.dev`.
+- Redirect URL permitida exacta: `https://quotable-unpledged-name.ngrok-free.dev/auth/callback`.
+
+No uses un comodín general para las redirecciones. Si cambia el dominio del túnel, actualiza APP_URL y ambas URLs de Supabase. Con correo/contraseña no se necesita una redirección al ingresar; la ruta callback queda disponible para las devoluciones de Auth y utiliza PKCE. La callback apunta a la app de ngrok, no al dominio de Supabase.
+
+## Ejecutar
 
 ```powershell
-npm install
-Copy-Item .env.example .env
-# Edita .env y agrega OLLAMA_API_KEY
 npm run dev
 ```
 
-Abre http://localhost:3000. La base se crea automáticamente en `data/presupuesto.db`. El panel, la carga de CSV y los gráficos manuales funcionan sin API key; el chat explica la configuración pendiente. No hay respuestas de IA simuladas ni datos de ejemplo precargados.
-
-Obtén tu clave en https://ollama.com/settings/keys y guárdala **únicamente en `.env`**, nunca en el frontend ni en Git. Reinicia el servidor al cambiarla. El modelo local se llama `gpt-oss:120b-cloud`; la API directa en `https://ollama.com/api/chat` usa `gpt-oss:120b`, como indica la [documentación de Ollama Cloud](https://docs.ollama.com/cloud). La aplicación traduce ese alias automáticamente. No necesitas instalar Ollama ni descargar 120B en tu computadora.
-
-## Uso
-
-1. Importa un CSV usando el botón superior. Puedes descargar `public/ejemplo-presupuesto.csv` desde la interfaz.
-2. Revisa la vista previa y confirma la importación. Se valida todo el archivo antes de guardarlo en una transacción.
-3. Selecciona proyecto y fecha máxima de corte. La tabla permite comprobar las partidas.
-4. Pregunta por modificaciones, ejecución, evolución de una partida o desviación por proyecto. Para evolución, identifica proyecto y partida.
-5. El agente consulta herramientas del backend y crea gráficos en el lienzo. También puedes generar una comparación manual sin IA.
-6. Los gráficos y la conversación permanecen al recargar. Los gráficos existentes no cambian al importar nuevos datos; muestran un aviso de versión anterior. Cada gráfico permite descargar su instantánea como JSON o eliminarlo del lienzo.
-
-## CSV y reglas de análisis
-
-Columnas exactas, en cualquier orden:
-
-```csv
-partida,presupuesto_inicial,presupuesto_modificado,ejecutado,fecha_corte,proyecto
-Alimentación,60000,72000,47000,2026-06-30,Nutrición infantil
-```
-
-- UTF-8; separador coma, punto y coma o tabulador autodetectado. Nombres entre comillas si contienen separadores.
-- Importes entre 0 y 1.000.000.000 con hasta dos decimales, punto decimal y sin separadores de miles. Se almacenan como **centavos enteros** y se convierten para mostrar y analizar. El límite mantiene exactas las sumas en JavaScript incluso con el máximo de registros.
-- Todos los registros del espacio deben usar una misma moneda. No se asume ninguna divisa.
-- Fecha real `AAAA-MM-DD`. Máximo 5.000 filas / 2 MB por archivo y 20.000 registros únicos en el espacio.
-- Clave única: `(proyecto, partida, fecha_corte)`. Duplicados dentro del archivo se rechazan. Importar otra vez actualiza esa clave; no duplica los montos. Las filas ausentes no se eliminan de la base.
-- Un corte debe incluir todas las partidas de un proyecto. Los totales toman el **último corte por proyecto** dentro del filtro de fecha, sin sumar cortes ni arrastrar partidas ausentes de cortes anteriores. Si corriges un corte existente, las claves no incluidas permanecen: la importación es incremental, no una sustitución completa del corte.
-- Ejecutado se interpreta como acumulado al corte, no como gasto del período.
-- Modificación: modificado − inicial. Porcentaje sobre inicial. Inicial cero → porcentaje indefinido.
-- Ejecución: ejecutado / modificado × 100. Modificado cero → porcentaje indefinido. Menos del 80% es una señal descriptiva; más del 100% indica sobre-ejecución. Sin cronograma/metas no se puede afirmar atraso.
-- Índice de desviación de proyecto (heurístico, no probabilidad): `60 × min(1, suma de excesos positivos por partida / modificado total) + 40 × min(1, suma de modificaciones absolutas por partida / inicial total)`. Ambos numeradores se calculan por partida para no cancelar excesos con saldos o aumentos con reducciones. Denominador cero con numerador positivo aporta el máximo del componente; ambos cero aporta cero. No penaliza automáticamente baja ejecución.
-- El sistema avisa cuando agrega proyectos con cortes diferentes. Para comparaciones estrictas, carga cortes comunes.
-
-## Desplegar en Vercel
-
-Un archivo SQLite dentro de una función **no es almacenamiento persistente**. Por ello se usa SQLite local en desarrollo y una base remota **libSQL** (SQLite) en producción, accesible con `@libsql/client`. No uses una base del nuevo motor Turso incompatible con libSQL: elige una instancia libSQL. Alternativamente ejecuta el backend en un servidor con disco persistente para mantener un archivo SQLite puro.
-
-1. Crea una base remota libSQL (por ejemplo en Turso) y obtén URL y token.
-2. Sube este proyecto a tu repositorio e impórtalo en Vercel como aplicación Vite. El proyecto incluye `vercel.json`, build `npm run build`, salida `dist` y función `api/index.js`.
-3. Configura las variables de entorno privadas:
-
-| Variable | Valor |
-|---|---|
-| `DATABASE_URL` | `libsql://...` de la base remota |
-| `DATABASE_AUTH_TOKEN` | Token de esa base |
-| `OLLAMA_API_KEY` | Clave de Ollama Cloud |
-| `OLLAMA_MODEL` | `gpt-oss:120b-cloud` |
-| `APP_PASSWORD` | Contraseña robusta de al menos 16 caracteres |
-
-4. Despliega. Las tablas se crean de forma idempotente en el primer acceso. El backend bloquea el arranque en Vercel si falta una base remota o la protección del espacio.
-
-La base local no se migra automáticamente: importa tus CSV en el espacio desplegado. Las conversaciones y gráficos locales permanecen en el archivo local. Cada despliegue que use la misma base y contraseña comparte los mismos datos; utiliza bases separadas para pruebas y producción.
-
-Esta versión es un **espacio compartido con contraseña**, no un sistema de cuentas o permisos por proyecto. La sesión dura 8 horas y usa cookie HttpOnly, SameSite y Secure en Vercel. La clave de Ollama nunca llega al navegador. Cambiar APP_PASSWORD invalida sesiones existentes. Para exposición a muchas personas, añade cuentas individuales, límites de uso y protección de intentos de acceso antes de ampliarlo.
-
-La duración máxima configurada es de 300 segundos; depende del plan y configuración de Vercel. El agente limita sus ciclos, tamaño de salida y tiempo, y comunica errores del proveedor. No se ha realizado un despliegue ni una llamada real a Ollama sin credenciales.
-
-## Verificación y estructura
+Para compartir la compilación de producción, en una terminal:
 
 ```powershell
-npm test
 npm run build
 npm start
 ```
 
-- `src/`: interfaz y gráficos Recharts; Markdown seguro sin HTML crudo.
-- `api/index.js`: handler Node de Vercel, sesión, importación, consultas, chat y gráficos.
-- `server/csv.js`: validación estricta y conversión a centavos.
-- `server/db.js`: esquema SQLite, importaciones atómicas e historial.
-- `server/analysis.js`: cálculos deterministas y gráficos con datos verificables.
-- `server/agent.js`: herramientas del agente y conexión directa a Ollama Cloud. No acepta SQL ni código del modelo.
-- `server/dev.js`: servidor local (Vite en desarrollo; `dist` con `npm start`).
-- `tests/`: validación, cortes, denominadores cero, riesgo, agente con proveedor simulado y API contra SQLite real.
+En otra terminal:
 
-Las herramientas devuelven páginas de hasta 100 filas; el agente puede paginar. Cada gráfico muestra hasta 100 elementos y declara truncamiento. La interfaz muestra los 100 últimos mensajes, los 100 últimos gráficos y las 30 últimas importaciones; los anteriores permanecen en la base. El contexto del agente incluye los últimos 12 mensajes y hasta 500 pares de nombres para orientación; puede consultar las herramientas para recuperar más datos.
+```powershell
+npm run ngrok
+```
 
-El navegador envía al servidor sólo la pregunta y filtros. El agente envía a Ollama los nombres de proyectos/partidas, resúmenes, las filas consultadas y un tramo del historial. Respeta el contexto de confidencialidad de tus proyectos al usar el servicio cloud. Haz copias del archivo SQLite con el servidor detenido o utiliza respaldos consistentes de tu proveedor remoto.
+Abre la URL de ngrok, crea una cuenta o inicia sesión. Cada cuenta comienza vacía. La clave de Ollama permanece en el backend. La clave publicable de Supabase es pública por diseño y las políticas RLS protegen los datos.
 
-Referencias: [Ollama Cloud](https://docs.ollama.com/cloud), [API de chat](https://docs.ollama.com/api/chat), [SQLite en Vercel](https://vercel.com/kb/guide/is-sqlite-supported-in-vercel), [cliente libSQL](https://docs.turso.tech/sdk/ts/reference).
+## Aislamiento y persistencia
+
+Todas las tablas tienen `user_id` vinculado a `auth.users`, RLS habilitado y forzado, y políticas `auth.uid() = user_id` tanto para leer como para escribir. Las tablas son `budget_rows`, `budget_imports`, `budget_messages`, `budget_charts` y `budget_settings`.
+
+Cada petición de la app envía su access token. El servidor lo verifica con Supabase Auth y usa ese mismo JWT para consultar PostgreSQL. No existe un cliente con service_role que eluda RLS, ni se acepta un user_id proporcionado por el navegador como propietario. Las funciones RPC son SECURITY INVOKER y no conceden acceso anónimo.
+
+La clave única de una partida incluye usuario, proyecto, partida y corte: dos usuarios pueden importar CSV idénticos sin compartir datos. La importación de filas y CSV original es atómica, al igual que el guardado de un turno de chat y sus gráficos. Las lecturas de estado son instantáneas consistentes y las revisiones pertenecen a cada usuario. Al salir o cambiar de cuenta se desmonta el panel para descartar datos y solicitudes visuales de la cuenta anterior.
+
+Los originales CSV se almacenan en PostgreSQL bajo RLS, no en un bucket público. Los gráficos conservan especificación y datos de la instantánea. El agente sólo recibe las filas y el historial del propietario de la solicitud.
+
+## Datos anteriores de SQLite
+
+El archivo `data/presupuesto.db` se conserva como respaldo local. No se asignan datos al primer usuario que se registre. La cuenta propietaria se elige explícitamente antes de importar.
+
+```powershell
+node scripts/export-legacy.js correo-del-propietario
+```
+
+El exportador de sólo lectura genera `.tools/supabase-legacy-migration.sql` (excluido de Git). El usuario debe existir en Supabase Auth. Aplica ese SQL con acceso administrativo al proyecto correcto. El proceso preserva CSV originales, filas, mensajes, gráficos y revisión, y aborta si la cuenta destino contiene datos para no sobrescribirlos. No publica ni borra el respaldo. No ejecutes la exportación otra vez para una cuenta distinta sin autorización del dueño de esos datos.
+
+## CSV y cálculos
+
+Columnas exactas: `partida,presupuesto_inicial,presupuesto_modificado,ejecutado,fecha_corte,proyecto`.
+
+- UTF-8, fecha AAAA-MM-DD e importes no negativos con punto decimal y hasta dos decimales, sin separador de miles. Una sola moneda en cada espacio.
+- Máximo 5.000 filas / 2 MB por archivo; 20.000 registros por usuario. Los importes se almacenan en centavos enteros.
+- Duplicados dentro del archivo se rechazan. Reimportar la misma clave actualiza sus importes; no elimina las filas ausentes.
+- Los totales toman el último corte de cada proyecto hasta la fecha elegida, sin sumar cortes ni arrastrar partidas antiguas ausentes. Cada corte debe incluir todas las partidas.
+- Ejecutado se interpreta como acumulado. Modificación = modificado − inicial. Ejecución = ejecutado / modificado × 100; denominador cero queda indefinido.
+- Ejecución menor al 80% es señal descriptiva; superior al 100% es exceso. Sin cronograma no se puede afirmar atraso.
+- Índice de desviación: `60 × min(1, suma de excesos positivos por partida / modificado total) + 40 × min(1, suma de modificaciones absolutas por partida / inicial total)`. Denominador cero con numerador positivo aporta el máximo; ambos cero, cero. No es probabilidad y no tiene umbrales de alerta aprobados.
+
+## Verificación
+
+```powershell
+npm test
+npm run build
+```
+
+Las pruebas usan PostgreSQL embebido con PGlite y ejecutan la migración real, roles, JWT simulado y RLS. Verifican dos usuarios, acceso anónimo, falsificación de propietario, consultas directas y RPC, escritura/borrado cruzados, importación y chat atómicos. Las pruebas de API simulan Supabase Auth y Ollama; no sustituyen la prueba de registro/login en el proyecto remoto.
+
+La interfaz muestra los últimos 100 mensajes/gráficos y 30 importaciones; los anteriores permanecen en la base. Cada herramienta devuelve hasta 100 filas por página. Los gráficos indican si truncaron datos.
+
+## Vercel
+
+El proyecto incluye `vercel.json`: Vite, salida dist, función api/index.js y ruta /auth/callback. Configura las mismas variables privadas en Vercel. Supabase guarda los datos independientemente de las funciones. Conserva la callback de ngrok mientras ésa sea la URL solicitada para autenticación.
+
+Documentación oficial: https://supabase.com/docs/guides/auth/general-configuration, https://supabase.com/docs/guides/database/postgres/row-level-security, https://supabase.com/docs/guides/auth/redirect-urls y https://docs.ollama.com/cloud.

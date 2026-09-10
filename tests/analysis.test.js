@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseCSV } from '../server/csv.js';
 import { currentRows, summary, analysis, makeChart, pct } from '../server/analysis.js';
-import { runAgent, providerModel } from '../server/agent.js';
+import { runAgent, providerModel, normalizeToolArgs } from '../server/agent.js';
 const csv=readFileSync(new URL('../public/ejemplo-presupuesto.csv',import.meta.url),'utf8');
 const rows=parseCSV(csv);
 test('CSV amounts use integer cents and quoted names remain intact',()=>{
@@ -46,6 +46,10 @@ test('charts retain snapshot, filter and revision provenance',()=>{
   assert.throws(()=>makeChart(rows,{kind:'comparacion',proyecto:'No existe'},1));
 });
 test('cloud routing uses the official direct API alias',()=>assert.equal(providerModel('gpt-oss:120b-cloud'),'gpt-oss:120b'));
+test('real provider singular aliases resolve and blank tool fields preserve active filters',()=>{
+  assert.deepEqual(normalizeToolArgs({kind:'modificacion',proyecto:'',fecha_corte:''},{proyecto:'A',fecha_corte:'2026-03-31'}),{kind:'modificaciones',proyecto:'A',fecha_corte:'2026-03-31'});
+  assert.equal(normalizeToolArgs({kind:'mod'}).kind,'modificaciones');
+});
 test('agent tool cycle generates charts from trusted calculations',async()=>{
   process.env.OLLAMA_API_KEY='test-only';let calls=0;
   const fetcher=async(url,options)=>{

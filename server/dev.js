@@ -12,7 +12,7 @@ const server=http.createServer(async(req,res)=>{
   if(vite)return vite.middlewares(req,res);
   try {
     const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
-    const path=resolve(root,'.'+(pathname==='/'?'/index.html':pathname));
+    const path=resolve(root,'.'+(pathname==='/'||pathname==='/auth/callback'?'/index.html':pathname));
     if(!path.startsWith(root+sep)){res.writeHead(403);return res.end();}
     const data=await readFile(path);res.setHeader('Content-Type',types[path.slice(path.lastIndexOf('.'))]||'application/octet-stream');res.end(data);
   }catch{res.writeHead(404);res.end('No encontrado');}

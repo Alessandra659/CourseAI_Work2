@@ -38,7 +38,7 @@ export function analysis(rows, args={}) {
     data=currentRows(rows,filters).map(metrics);
     if(kind==='modificaciones') data.sort((a,b)=>Math.abs(b.modificacion)-Math.abs(a.modificacion));
     else if(kind==='ejecucion') data.sort((a,b)=>(b.ejecucion_pct??-1)-(a.ejecucion_pct??-1));
-    else if(kind!=='comparacion') throw new AppError('Tipo de análisis desconocido.');
+    else if(kind!=='comparacion') throw new AppError('Tipo de análisis desconocido. Usa kind: comparacion, modificaciones, ejecucion, evolucion, proyectos o riesgo.');
   }
   const page=Number.isInteger(offset)&&offset>=0?offset:0;
   return {kind, filters, total:data.length, offset:page, data:data.slice(page,page+100), truncated:data.length>page+100};
