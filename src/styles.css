@@ -10,6 +10,9 @@
 .auth-hint{font-size:12px!important;margin:0 0 14px}.workspace-user>div:last-child{min-width:0}.workspace-user strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.login-card>.error{margin-top:16px}
 @media(max-width:720px){.top-caption{display:flex}.top-caption>.status-dot{display:none}.top-caption{font-size:0}.top-caption .icon-button{font-size:14px}}
 
+/* El contenido del análisis debe crecer completo; la página, no los paneles, controla el scroll. */
+.workbench{height:auto;min-height:0;overflow:visible}.chat-panel{height:auto;min-height:0}.chat-scroll{overflow:visible;flex:none}.canvas-panel{max-height:none}.canvas-content{overflow:visible}html,body{overflow-x:hidden}
+
 .chart-actions{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}.chart-actions .button{font-size:12px;padding:8px 11px}
 .message table{display:block;width:100%;overflow-x:auto;border-collapse:collapse;margin:12px 0;font-size:12px;white-space:nowrap}.message th,.message td{padding:8px 9px;border:1px solid #e3e9e1;text-align:left}.message th{background:#f2f6f1;color:#456652;font-weight:700}.message tr:nth-child(even) td{background:#fafcf9}.message code{background:#f1f4ef;border-radius:3px;padding:1px 4px;font-size:.92em}.message blockquote{border-left:3px solid #c2d2bf;color:#6f8175;margin:10px 0;padding:2px 0 2px 12px}.message a{color:#2c715a;text-decoration:underline}
 .data-view .table-scroll{overflow-x:hidden}.data-view table{table-layout:fixed;white-space:normal;width:100%}.data-view th,.data-view td{overflow-wrap:anywhere}.data-view th:first-child,.data-view td:first-child{width:28%}.data-view th:nth-child(2),.data-view td:nth-child(2){width:19%}.data-view th:nth-child(n+3),.data-view td:nth-child(n+3){width:13.25%}
