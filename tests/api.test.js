@@ -36,10 +36,15 @@ test('API verifies bearer sessions, forwards owner JWTs and stores chat+charts a
   assert.equal((await request('state')).data.count,18);
   assert.equal((await request('state','GET',undefined,'user-b')).data.count,0);
   assert.equal((await request('import','POST',{csv:'invalid',name:'bad'})).status,400);
+  for(const kind of ['proyectos','salud','proyeccion']) {
+   const response=await request('chart','POST',{kind,filters:{}});
+   assert.equal(response.status,200);
+   assert.equal(response.data.chart.kind,kind==='proyeccion'?'proyeccion':kind);
+  }
   process.env.OLLAMA_API_KEY='test-only';
   assert.equal((await request('chat','POST',{question:'Analiza mis proyectos',user_id:userB})).status,200);
   const own=(await request('state')).data,other=(await request('state','GET',undefined,'user-b')).data;
-  assert.equal(own.messages.length,2);assert.equal(own.charts.length,1);assert.equal(other.messages.length,0);assert.equal(other.charts.length,0);
-  await request('chart&id='+own.charts[0].id,'DELETE',undefined,'user-b');assert.equal((await request('state')).data.charts.length,1);
+  assert.equal(own.messages.length,2);assert.equal(own.charts.length,4);assert.equal(other.messages.length,0);assert.equal(other.charts.length,0);
+  await request('chart&id='+own.charts[0].id,'DELETE',undefined,'user-b');assert.equal((await request('state')).data.charts.length,4);
  }finally{globalThis.fetch=original;delete process.env.OLLAMA_API_KEY;server.closeAllConnections();await new Promise(r=>server.close(r));await db.close();}
 });
