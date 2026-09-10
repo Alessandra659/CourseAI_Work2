@@ -2,6 +2,8 @@
 
 React + backend JavaScript compatible con Vercel Functions + PostgreSQL/Supabase + Supabase Auth. Ollama Cloud analiza únicamente los datos del usuario que hizo la consulta.
 
+Producción: [monitor-presupuesto.vercel.app](https://monitor-presupuesto.vercel.app/).
+
 ## Configuración
 
 Node.js 24 recomendado. Instala las dependencias con `npm install` y configura `.env` a partir de `.env.example` sin sobrescribir tus claves existentes:
@@ -10,10 +12,10 @@ Node.js 24 recomendado. Instala las dependencias con `npm install` y configura `
 |---|---|
 | SUPABASE_URL | URL del proyecto monitor-presupuesto |
 | SUPABASE_PUBLISHABLE_KEY | Clave publicable o anon; nunca service_role |
-| APP_URL | https://quotable-unpledged-name.ngrok-free.dev |
+| APP_URL | https://monitor-presupuesto.vercel.app |
 | OLLAMA_API_KEY | Clave privada de Ollama Cloud |
 | OLLAMA_MODEL | gpt-oss:120b-cloud |
-| NGROK_AUTHTOKEN | Token privado del túnel |
+| NGROK_AUTHTOKEN | Token privado, sólo para compartir una ejecución local |
 | PORT | 3000 |
 
 APP_PASSWORD, DATABASE_URL y DATABASE_AUTH_TOKEN ya no se utilizan. El backend no abre SQLite y no admite sesiones de la antigua contraseña compartida. `.env`, bases locales, exportaciones de datos, claves y ejecutables se excluyen de Git.
@@ -27,10 +29,10 @@ Configura Authentication:
 - Email/password habilitado y registros permitidos.
 - **Confirm email desactivado** (`mailer_autoconfirm: true`). El registro debe devolver una sesión inmediatamente.
 - Contraseñas de al menos 8 caracteres.
-- Site URL: `https://quotable-unpledged-name.ngrok-free.dev`.
-- Redirect URL permitida exacta: `https://quotable-unpledged-name.ngrok-free.dev/auth/callback`.
+- Site URL: `https://monitor-presupuesto.vercel.app`.
+- Redirect URL permitida exacta: `https://monitor-presupuesto.vercel.app/auth/callback`.
 
-No uses un comodín general para las redirecciones. Si cambia el dominio del túnel, actualiza APP_URL y ambas URLs de Supabase. Con correo/contraseña no se necesita una redirección al ingresar; la ruta callback queda disponible para las devoluciones de Auth y utiliza PKCE. La callback apunta a la app de ngrok, no al dominio de Supabase.
+No uses un comodín general para las redirecciones. Si cambia el dominio de Vercel, actualiza APP_URL y ambas URLs de Supabase. Con correo/contraseña no se necesita una redirección al ingresar; la ruta callback queda disponible para las devoluciones de Auth y utiliza PKCE. La callback apunta al dominio de Vercel, no al dominio de Supabase.
 
 ## Ejecutar
 
@@ -45,13 +47,13 @@ npm run build
 npm start
 ```
 
-En otra terminal:
+Para compartir una ejecución local con ngrok, de forma opcional:
 
 ```powershell
 npm run ngrok
 ```
 
-Abre la URL de ngrok, crea una cuenta o inicia sesión. Cada cuenta comienza vacía. La clave de Ollama permanece en el backend. La clave publicable de Supabase es pública por diseño y las políticas RLS protegen los datos.
+La URL de producción es `https://monitor-presupuesto.vercel.app/`. Cada cuenta comienza vacía. La clave de Ollama permanece en el backend. La clave publicable de Supabase es pública por diseño y las políticas RLS protegen los datos.
 
 ## Aislamiento y persistencia
 
@@ -98,6 +100,6 @@ La interfaz muestra los últimos 100 mensajes/gráficos y 30 importaciones; los 
 
 ## Vercel
 
-El proyecto incluye `vercel.json`: Vite, salida dist, función api/index.js y ruta /auth/callback. Configura las mismas variables privadas en Vercel. Supabase guarda los datos independientemente de las funciones. Conserva la callback de ngrok mientras ésa sea la URL solicitada para autenticación.
+El proyecto incluye `vercel.json`: Vite, salida dist, función `api/index.js` y ruta `/auth/callback`. El proyecto de producción es `monitor-presupuesto` y despliega desde `main`. En Vercel están configuradas `OLLAMA_API_KEY`, `OLLAMA_MODEL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` y `APP_URL`. Supabase guarda los datos independientemente de las funciones.
 
 Documentación oficial: https://supabase.com/docs/guides/auth/general-configuration, https://supabase.com/docs/guides/database/postgres/row-level-security, https://supabase.com/docs/guides/auth/redirect-urls y https://docs.ollama.com/cloud.
