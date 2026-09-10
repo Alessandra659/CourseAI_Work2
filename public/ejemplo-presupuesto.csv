@@ -1,19 +1,19 @@
-partida,presupuesto_inicial,presupuesto_modificado,ejecutado,fecha_corte,proyecto
-Alimentación,60000,62000,18000,2026-03-31,Nutrición infantil
-Personal de campo,40000,40000,10000,2026-03-31,Nutrición infantil
-Material educativo,15000,15000,3000,2026-03-31,Nutrición infantil
-Alimentación,60000,72000,47000,2026-06-30,Nutrición infantil
-Personal de campo,40000,45000,31000,2026-06-30,Nutrición infantil
-Material educativo,15000,13000,14000,2026-06-30,Nutrición infantil
-Infraestructura,90000,90000,20000,2026-03-31,Agua para todos
-Capacitación,25000,26000,4000,2026-03-31,Agua para todos
-Monitoreo,18000,18000,4000,2026-03-31,Agua para todos
-Infraestructura,90000,120000,126000,2026-06-30,Agua para todos
-Capacitación,25000,22000,12000,2026-06-30,Agua para todos
-Monitoreo,18000,20000,9000,2026-06-30,Agua para todos
-Becas,80000,80000,25000,2026-03-31,Jóvenes con futuro
-Talleres,30000,31000,7000,2026-03-31,Jóvenes con futuro
-Acompañamiento,22000,22000,5500,2026-03-31,Jóvenes con futuro
-Becas,80000,85000,52000,2026-06-30,Jóvenes con futuro
-Talleres,30000,28000,19000,2026-06-30,Jóvenes con futuro
-Acompañamiento,22000,24000,18000,2026-06-30,Jóvenes con futuro
+partida,presupuesto_inicial,presupuesto_modificado,ejecutado,fecha_corte,proyecto,fecha_inicio_proyecto,fecha_fin_proyecto
+Alimentación,60000,62000,18000,2026-03-31,Nutrición infantil,2026-01-01,2026-12-31
+Personal de campo,40000,40000,10000,2026-03-31,Nutrición infantil,2026-01-01,2026-12-31
+Material educativo,15000,15000,3000,2026-03-31,Nutrición infantil,2026-01-01,2026-12-31
+Alimentación,60000,72000,47000,2026-06-30,Nutrición infantil,2026-01-01,2026-12-31
+Personal de campo,40000,45000,31000,2026-06-30,Nutrición infantil,2026-01-01,2026-12-31
+Material educativo,15000,13000,14000,2026-06-30,Nutrición infantil,2026-01-01,2026-12-31
+Infraestructura,90000,90000,20000,2026-03-31,Agua para todos,2026-01-01,2026-12-31
+Capacitación,25000,26000,4000,2026-03-31,Agua para todos,2026-01-01,2026-12-31
+Monitoreo,18000,18000,4000,2026-03-31,Agua para todos,2026-01-01,2026-12-31
+Infraestructura,90000,120000,126000,2026-06-30,Agua para todos,2026-01-01,2026-12-31
+Capacitación,25000,22000,12000,2026-06-30,Agua para todos,2026-01-01,2026-12-31
+Monitoreo,18000,20000,9000,2026-06-30,Agua para todos,2026-01-01,2026-12-31
+Becas,80000,80000,25000,2026-03-31,Jóvenes con futuro,2026-01-01,2026-12-31
+Talleres,30000,31000,7000,2026-03-31,Jóvenes con futuro,2026-01-01,2026-12-31
+Acompañamiento,22000,22000,5500,2026-03-31,Jóvenes con futuro,2026-01-01,2026-12-31
+Becas,80000,85000,52000,2026-06-30,Jóvenes con futuro,2026-01-01,2026-12-31
+Talleres,30000,28000,19000,2026-06-30,Jóvenes con futuro,2026-01-01,2026-12-31
+Acompañamiento,22000,24000,18000,2026-06-30,Jóvenes con futuro,2026-01-01,2026-12-31

@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-export const columns = ['partida', 'presupuesto_inicial', 'presupuesto_modificado', 'ejecutado', 'fecha_corte', 'proyecto'];
+export const columns = ['partida', 'presupuesto_inicial', 'presupuesto_modificado', 'ejecutado', 'fecha_corte', 'proyecto', 'fecha_inicio_proyecto', 'fecha_fin_proyecto'];
 export class AppError extends Error { constructor(message, status = 400) { super(message); this.status = status; } }
 export function parseCSV(csv) {
   if (typeof csv !== 'string' || Buffer.byteLength(csv) > 2_000_000) throw new AppError('El CSV debe pesar como máximo 2 MB.');
@@ -23,6 +23,12 @@ export function parseCSV(csv) {
     const date = String(row.fecha_corte ?? '').trim();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number(date.slice(0,4)) < 1900 || !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date) fail('fecha_corte debe ser una fecha real con formato AAAA-MM-DD.');
     out.fecha_corte = date;
+    for (const c of ['fecha_inicio_proyecto', 'fecha_fin_proyecto']) {
+      const value = String(row[c] ?? '').trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number(value.slice(0, 4)) < 1900 || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0, 10) !== value) fail(`${c} debe ser una fecha real con formato AAAA-MM-DD.`);
+      out[c] = value;
+    }
+    if (out.fecha_fin_proyecto <= out.fecha_inicio_proyecto) fail('fecha_fin_proyecto debe ser posterior a fecha_inicio_proyecto.');
     const key = JSON.stringify([out.proyecto, out.partida, date]);
     if (seen.has(key)) fail('partida, proyecto y fecha de corte duplicados dentro del archivo.');
     seen.add(key);

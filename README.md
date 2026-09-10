@@ -77,13 +77,15 @@ El exportador de sólo lectura genera `.tools/supabase-legacy-migration.sql` (ex
 
 ## CSV y cálculos
 
-Columnas exactas: `partida,presupuesto_inicial,presupuesto_modificado,ejecutado,fecha_corte,proyecto`.
+Columnas exactas: `partida,presupuesto_inicial,presupuesto_modificado,ejecutado,fecha_corte,proyecto,fecha_inicio_proyecto,fecha_fin_proyecto`.
 
 - UTF-8, fecha AAAA-MM-DD e importes no negativos con punto decimal y hasta dos decimales, sin separador de miles. Una sola moneda en cada espacio.
 - Máximo 5.000 filas / 2 MB por archivo; 20.000 registros por usuario. Los importes se almacenan en centavos enteros.
 - Duplicados dentro del archivo se rechazan. Reimportar la misma clave actualiza sus importes; no elimina las filas ausentes.
 - Los totales toman el último corte de cada proyecto hasta la fecha elegida, sin sumar cortes ni arrastrar partidas antiguas ausentes. Cada corte debe incluir todas las partidas.
 - Ejecutado se interpreta como acumulado. Modificación = modificado − inicial. Ejecución = ejecutado / modificado × 100; denominador cero queda indefinido.
+- El rango saludable compara el porcentaje de ejecución con el porcentaje de tiempo transcurrido entre `fecha_inicio_proyecto` y `fecha_fin_proyecto`. El umbral configurable es de 15 puntos porcentuales (`HEALTHY_BAND_POINTS` en `server/analysis.js`): dentro del rango es saludable; por debajo indica riesgo de sub-ejecución y por encima riesgo de sobre-ejecución.
+- La proyección extiende el ritmo observado (`ejecutado / tiempo transcurrido`) hasta la fecha fin y muestra el porcentaje esperado, el monto proyectado y la diferencia aproximada frente al presupuesto modificado.
 - Ejecución menor al 80% es señal descriptiva; superior al 100% es exceso. Sin cronograma no se puede afirmar atraso.
 - Índice de desviación: `60 × min(1, suma de excesos positivos por partida / modificado total) + 40 × min(1, suma de modificaciones absolutas por partida / inicial total)`. Denominador cero con numerador positivo aporta el máximo; ambos cero, cero. No es probabilidad y no tiene umbrales de alerta aprobados.
 

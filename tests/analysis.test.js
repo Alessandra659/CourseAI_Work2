@@ -2,13 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseCSV } from '../server/csv.js';
-import { currentRows, summary, analysis, makeChart, pct } from '../server/analysis.js';
+import { currentRows, summary, analysis, makeChart, pct, healthMetrics, HEALTHY_BAND_POINTS } from '../server/analysis.js';
 import { runAgent, providerModel, normalizeToolArgs } from '../server/agent.js';
 const csv=readFileSync(new URL('../public/ejemplo-presupuesto.csv',import.meta.url),'utf8');
 const rows=parseCSV(csv);
 test('CSV amounts use integer cents and quoted names remain intact',()=>{
   assert.equal(rows.length,18);assert.equal(rows[0].presupuesto_inicial,6000000);
-  const data=parseCSV('partida,presupuesto_inicial,presupuesto_modificado,ejecutado,fecha_corte,proyecto\n"Alimentos, frescos",10.25,12.10,1.01,2026-06-30,Proyecto');
+  const data=parseCSV('partida,presupuesto_inicial,presupuesto_modificado,ejecutado,fecha_corte,proyecto,fecha_inicio_proyecto,fecha_fin_proyecto\n"Alimentos, frescos",10.25,12.10,1.01,2026-06-30,Proyecto,2026-01-01,2026-12-31');
   assert.equal(data[0].ejecutado,101);assert.equal(data[0].partida,'Alimentos, frescos');
 });
 test('CSV rejects impossible dates, duplicate keys, blank, negative, thousands and extra precision',()=>{
@@ -38,6 +38,27 @@ test('zero denominators are null and item overruns cannot cancel out',()=>{
   assert.equal(project.exceso,6000);assert.ok(project.ejecucion_pct<100);assert.ok(project.riesgo>0);
   const r=[{proyecto:'A',partida:'X',fecha_corte:'2026-01-01',presupuesto_inicial:0,presupuesto_modificado:0,ejecutado:100}];
   assert.equal(summary(r).projects[0].riesgo,60);
+});
+test('healthy range and projection use the project timeline',()=>{
+  const base={proyecto:'A',partida:'X',fecha_corte:'2026-06-30',fecha_inicio_proyecto:'2026-01-01',fecha_fin_proyecto:'2026-12-31',presupuesto_inicial:10000,presupuesto_modificado:10000};
+  const sub=healthMetrics({...base,ejecutado:3000});
+  const over=healthMetrics({...base,ejecutado:7000});
+  const healthy=healthMetrics({...base,ejecutado:5000});
+  assert.equal(HEALTHY_BAND_POINTS,15);
+  assert.equal(sub.salud,'riesgo de sub-ejecución');
+  assert.equal(over.salud,'riesgo de sobre-ejecución');
+  assert.equal(healthy.salud,'saludable');
+  assert.ok(healthy.proyeccion_ejecucion_pct>99 && healthy.proyeccion_ejecucion_pct<102);
+  assert.equal(healthy.proyeccion_estado,'superaría el presupuesto');
+  assert.ok(healthy.proyeccion_variacion>0);
+});
+test('health and projection analysis kinds expose calculated fields',()=>{
+  const result=analysis(rows,{kind:'salud'});
+  assert.equal(result.data.length,9);
+  assert.ok('salud' in result.data[0] && 'brecha_tiempo_ejecucion_pp' in result.data[0]);
+  const projection=analysis(rows,{kind:'proyeccion'});
+  assert.equal(projection.data.length,3);
+  assert.ok('proyeccion_ejecutado' in projection.data[0]);
 });
 test('charts retain snapshot, filter and revision provenance',()=>{
   const chart=makeChart(rows,{kind:'comparacion',proyecto:'Agua para todos'},3);
